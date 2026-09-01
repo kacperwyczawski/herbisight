@@ -1,0 +1,34 @@
+/* Weedout for YouTube — flagged items are marked with [data-aib] by content.js.
+   The root element carries data-aib-on (master switch) and data-aib-mode. */
+
+/* Hide mode: collapse the item entirely so the grid/list reflows. */
+html[data-aib-on][data-aib-mode="hide"] [data-aib] {
+  display: none !important;
+}
+
+/* Dim mode: keep the item visible but faded, with a small AI tag —
+   useful to verify what would be removed before trusting hide mode. */
+html[data-aib-on][data-aib-mode="dim"] [data-aib] {
+  opacity: 0.15 !important;
+  filter: grayscale(1);
+  position: relative;
+}
+
+html[data-aib-on][data-aib-mode="dim"] [data-aib]:hover {
+  opacity: 0.6 !important;
+}
+
+html[data-aib-on][data-aib-mode="dim"] [data-aib]::after {
+  content: "AI";
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  z-index: 10;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: #b91c1c;
+  color: #fff;
+  font: 700 11px/16px "Roboto", "Helvetica Neue", Arial, sans-serif;
+  letter-spacing: 0.4px;
+  pointer-events: none;
+}

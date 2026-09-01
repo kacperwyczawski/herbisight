@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header>
+    <img src="icons/icon-48.png" alt="" width="24" height="24">
+    <h1>Weedout</h1>
+    <label class="switch" title="Enable / disable filtering">
+      <input type="checkbox" id="enabled">
+      <span class="slider"></span>
+    </label>
+  </header>
+
+  <section class="row">
+    <span class="label">AI-labeled videos</span>
+    <div class="seg" id="mode">
+      <button data-mode="hide" id="mode-hide">Remove</button>
+      <button data-mode="dim" id="mode-dim">Dim</button>
+    </div>
+  </section>
+
+  <section class="row">
+    <span class="label">Auto-skip AI Shorts</span>
+    <label class="switch small">
+      <input type="checkbox" id="skipShorts">
+      <span class="slider"></span>
+    </label>
+  </section>
+
+  <section class="stats">
+    <div><b id="stat-session">–</b><span>weeds pulled<br>on this page</span></div>
+    <div><b id="stat-total">–</b><span>pulled<br>all-time</span></div>
+    <div><b id="stat-cache">–</b><span>videos<br>checked</span></div>
+  </section>
+
+  <footer>
+    <span class="hint">Detects YouTube’s own “Made&nbsp;with&nbsp;AI” label</span>
+    <button id="clear" title="Forget all cached verdicts">Reset cache</button>
+  </footer>
+
+  <script src="popup.js"></script>
+</body>
+</html>
