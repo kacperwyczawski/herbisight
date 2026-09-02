@@ -37,7 +37,7 @@
   const CLEAN_TTL_DAYS = 30;    // re-check "clean" verdicts after this many days
   const FLAGGED_TTL_DAYS = 180; // re-check "AI" verdicts after this many days
   const CACHE_MAX = 30000;
-  const DEFAULTS = { enabled: true, mode: 'hide', skipShorts: true };
+  const DEFAULTS = { enabled: true, mode: 'dim', skipShorts: true };
 
   // AI-badge test, locale-independent first (icon), label text as backup.
   const AI_LABEL_RE = /(^|\s)(AI|IA|KI|ИИ)(:|\s|$)|made with AI|synthetic|altered|generat|sztuczn|künstlich|generiert|génér|sintéti|sintetiz|yapay|生成|생성|人工知能/i;

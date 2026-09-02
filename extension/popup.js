@@ -2,7 +2,7 @@
 (() => {
   'use strict';
   const B = globalThis.browser ?? globalThis.chrome;
-  const DEFAULTS = { enabled: true, mode: 'hide', skipShorts: true };
+  const DEFAULTS = { enabled: true, mode: 'dim', skipShorts: true };
   let settings = { ...DEFAULTS };
 
   const $ = (id) => document.getElementById(id);
