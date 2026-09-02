@@ -1,6 +1,7 @@
 # HerbiSight for YouTube
 
-> **Note:** HerbiSight for YouTube is a fork of [weedout-for-youtube](https://github.com/weedout-for-youtube) ported to Firefox.
+> [!NOTE]
+> HerbiSight for YouTube is a fork of [weedout-for-youtube](https://github.com/masteranza/weedout-for-youtube) ported to Firefox.
 
 HerbiSight is a Firefox extension that automatically removes videos YouTube labels as “Made with AI” from your feeds, search results, related videos, playlists, and Shorts before you click them.
 
