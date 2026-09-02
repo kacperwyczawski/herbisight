@@ -58,6 +58,7 @@ bun run build
 
 HerbiSight can only filter videos YouTube labels. Unlabeled AI content still gets through.
 
-## License
+## License & Privacy
 
-[MIT License](LICENSE)
+- [MIT License](LICENSE)
+- [Privacy Policy](PRIVACY.md)
