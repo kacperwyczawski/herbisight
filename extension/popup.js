@@ -1,4 +1,4 @@
-/* Weedout popup: settings live in storage; stats come from the active tab. */
+/* HerbiSight popup: settings live in storage; stats come from the active tab. */
 (() => {
   'use strict';
   const B = globalThis.browser ?? globalThis.chrome;

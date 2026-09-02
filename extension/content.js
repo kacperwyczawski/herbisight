@@ -1,4 +1,4 @@
-/* Weedout for YouTube — silently filters videos YouTube labels as "Made with AI".
+/* HerbiSight for YouTube — silently filters videos YouTube labels as "Made with AI".
  *
  * How it works:
  *   YouTube only ships the AI-disclosure badge in *watch-page* data

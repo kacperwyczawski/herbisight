@@ -1,27 +1,22 @@
-# macOS
+# OS
 .DS_Store
 **/.DS_Store
+Thumbs.db
 
-# Xcode
-xcuserdata/
-**/xcuserdata/
-DerivedData/
-build/
-**/build/
-*.xcarchive
-*.dSYM/
-*.swiftmodule/
+# Dependencies
+node_modules/
+bun.lockb
+bun.lock
+
+# Build & web-ext outputs
+dist/
+web-ext-artifacts/
+*.zip
+*.xpi
+
+# Backups & logs
 *.bak
+*.log
 
-# Backups
-*.bak
-
-# Python
-__pycache__/
-*.pyc
-
-# Local launch tooling and private release material
+# Private tooling
 .claude/
-appstore/weedout-promocodes.txt
-appstore/promotion-log.md
-appstore/screenshots/

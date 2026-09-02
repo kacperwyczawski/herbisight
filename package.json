@@ -1,0 +1,14 @@
+{
+  "name": "herbisight",
+  "version": "1.0.0",
+  "description": "Firefox extension that removes AI-labeled videos from YouTube feeds, search, and Shorts.",
+  "scripts": {
+    "dev": "web-ext run --source-dir extension",
+    "build": "web-ext build --source-dir extension --artifacts-dir dist --overwrite-dest",
+    "lint": "web-ext lint --source-dir extension"
+  },
+  "devDependencies": {
+    "web-ext": "^8.4.0"
+  },
+  "license": "MIT"
+}
