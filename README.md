@@ -1,5 +1,7 @@
 # HerbiSight
 
+![Mozilla Add-on Version](https://img.shields.io/amo/v/herbisight-for-youtube)
+
 > [!NOTE]
 > HerbiSight is a fork of [weedout-for-youtube](https://github.com/masteranza/weedout-for-youtube) ported to Firefox.
 
