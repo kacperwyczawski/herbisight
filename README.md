@@ -3,7 +3,7 @@
 ![Mozilla Add-on Version](https://img.shields.io/amo/v/herbisight)
 
 > [!NOTE]
-> HerbiSight is a fork of [weedout-for-youtube](https://github.com/masteranza/weedout-for-youtube) ported to Firefox.
+> HerbiSight is a fork of [weedout-for-youtube](https://github.com/masteranza/weedout-for-youtube) ported to Firefox with added Facebook support.
 
 HerbiSight is a Firefox extension for Desktop and Android that automatically removes or dims content labeled as AI from your YouTube feeds (including search, related videos, and Shorts) and Facebook feeds.
 
