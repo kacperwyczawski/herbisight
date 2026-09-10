@@ -1,4 +1,4 @@
-/* HerbiSight for YouTube — silently filters videos YouTube labels as "Made with AI".
+/* HerbiSight (YouTube) — silently filters videos YouTube labels as "Made with AI".
  *
  * How it works:
  *   YouTube only ships the AI-disclosure badge in *watch-page* data
@@ -37,10 +37,7 @@
   const CLEAN_TTL_DAYS = 30;    // re-check "clean" verdicts after this many days
   const FLAGGED_TTL_DAYS = 180; // re-check "AI" verdicts after this many days
   const CACHE_MAX = 30000;
-  const DEFAULTS = { enabled: true, mode: 'dim', skipShorts: true };
-
-  // AI-badge test, locale-independent first (icon), label text as backup.
-  const AI_LABEL_RE = /(^|\s)(AI|IA|KI|ИИ)(:|\s|$)|made with AI|synthetic|altered|generat|sztuczn|künstlich|generiert|génér|sintéti|sintetiz|yapay|生成|생성|人工知能/i;
+  const { DEFAULTS, AI_LABEL_RE, normalizeSettings } = globalThis.HerbiSight;
 
   // ------------------------------------------------------------------- state
   let settings = { ...DEFAULTS };
@@ -66,9 +63,10 @@
   const applyRootAttrs = () => {
     const de = document.documentElement;
     if (!de) return;
-    if (settings.enabled) de.setAttribute('data-aib-on', '');
+    const isEnabled = settings.youtubeMode !== 'allow';
+    if (isEnabled) de.setAttribute('data-aib-on', '');
     else de.removeAttribute('data-aib-on');
-    de.setAttribute('data-aib-mode', settings.mode === 'dim' ? 'dim' : 'hide');
+    de.setAttribute('data-aib-mode', settings.youtubeMode === 'block' ? 'hide' : 'dim');
   };
 
   // ----------------------------------------------------------------- storage
@@ -76,13 +74,13 @@
     try {
       const got = await B.storage.local.get(['settings', 'cache_v1']);
       if (got.settings && typeof got.settings === 'object') {
-        settings = { ...DEFAULTS, ...got.settings };
+        settings = normalizeSettings(got.settings);
       }
       if (got.cache_v1 && typeof got.cache_v1 === 'object') cache = got.cache_v1;
     } catch (e) { /* first run */ }
     storageReady = true;
     applyRootAttrs();
-    onNavigate(); // also schedules a scan; covers the initial page before any yt-navigate-finish
+    onNavigate(); // covers initial page before any yt-navigate-finish
   };
 
   const pruneCache = () => {
@@ -198,7 +196,7 @@
   };
 
   const pump = () => {
-    if (!settings.enabled) return;
+    if (settings.youtubeMode === 'allow') return;
     const now = Date.now();
     if (now < backoffUntil) {
       setTimeout(pump, backoffUntil - now + 50);
@@ -259,7 +257,7 @@
   };
 
   const scan = () => {
-    if (!storageReady || !settings.enabled || !document.body) return;
+    if (!storageReady || settings.youtubeMode === 'allow' || !document.body) return;
     for (const el of document.querySelectorAll(CONTAINER_SEL)) processElement(el);
   };
 
@@ -279,7 +277,7 @@
   };
 
   const maybeSkipShort = (id) => {
-    if (!settings.enabled || !settings.skipShorts) return;
+    if (settings.youtubeMode === 'allow' || !settings.skipShorts) return;
     const now = Date.now();
     if (lastShortsSkip.id === id && now - lastShortsSkip.t < 2500) return;
     lastShortsSkip = { id, t: now };
@@ -292,7 +290,7 @@
     if (!storageReady) return;
     clientVersion = null; // page scripts may have been replaced; re-scrape lazily
     const id = currentWatchId();
-    if (id && settings.enabled) {
+    if (id && settings.youtubeMode !== 'allow') {
       // Warm the cache for the video being watched; if it's a flagged Short, skip it.
       const v = cachedVerdict(id);
       const isShort = location.pathname.startsWith('/shorts/');
@@ -318,8 +316,9 @@
         let flaggedCount = 0;
         for (const id in cache) if (cache[id][0]) flaggedCount++;
         sendResponse({
+          platform: 'youtube',
           sessionPulled: hiddenIds.size,
-          cacheCount: Object.keys(cache).length,
+          entriesChecked: Object.keys(cache).length,
           flaggedCount
         });
       }
@@ -331,10 +330,10 @@
     B.storage.onChanged.addListener((changes, area) => {
       if (area !== 'local') return;
       if (changes.settings) {
-        const wasEnabled = settings.enabled;
-        settings = { ...DEFAULTS, ...(changes.settings.newValue || {}) };
+        const wasAllowed = settings.youtubeMode === 'allow';
+        settings = normalizeSettings(changes.settings.newValue);
         applyRootAttrs();
-        if (settings.enabled && !wasEnabled) scheduleScan();
+        if (wasAllowed && settings.youtubeMode !== 'allow') scheduleScan();
       }
       if (changes.cache_v1 && changes.cache_v1.newValue &&
           Object.keys(changes.cache_v1.newValue).length === 0 &&
@@ -350,7 +349,7 @@
   } catch (e) { /* ignore */ }
 
   // -------------------------------------------------------------------- boot
-  applyRootAttrs(); // defaults immediately, real settings right after storage read
+  applyRootAttrs();
   loadStorage();
 
   const observer = new MutationObserver(scheduleScan);
@@ -364,7 +363,7 @@
     startObserver();
   }
 
-  // YouTube SPA navigation + safety-net polling (href watcher covers Shorts swipes)
+  // YouTube SPA navigation + safety-net polling
   document.addEventListener('yt-navigate-finish', onNavigate);
   document.addEventListener('yt-page-data-updated', scheduleScan);
   setInterval(() => {

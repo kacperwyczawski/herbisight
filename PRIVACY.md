@@ -1,22 +1,22 @@
-# Privacy Policy for HerbiSight for YouTube
+# Privacy Policy for HerbiSight
 
-**Last updated:** September 2, 2026
+**Last updated:** September 10, 2026
 
-HerbiSight for YouTube is committed to protecting user privacy. This policy outlines how data is handled.
+HerbiSight is committed to protecting user privacy. This policy outlines how data is handled.
 
 ## 1. Zero Data Collection
 
-HerbiSight for YouTube **does not collect, transmit, store, or share any personal data, browsing history, or user identifiers**.
+HerbiSight **does not collect, transmit, store, or share any personal data, browsing history, or user identifiers**.
 
 ## 2. How the Extension Operates
 
-- **Local Processing**: All detection and filtering logic executes locally within your browser on `youtube.com` and `m.youtube.com`.
-- **Local Storage**: The extension stores user preferences (e.g., enable switch, filtering mode) and cached video verdict flags locally on your device using Firefox's `browser.storage.local` API. This data never leaves your device and can be cleared at any time via the extension popup ("Reset cache").
-- **Network Requests**: The extension only issues standard requests to YouTube's own internal API endpoint (`/youtubei/v1/next`) to retrieve video disclosure metadata. No third-party servers, external APIs, analytics, or tracking services are used.
+- **Local Processing**: All detection and filtering logic executes locally within your browser on supported platforms (YouTube and Facebook).
+- **Local Storage**: The extension stores user preferences (filtering modes) and cached video verdict flags locally on your device using Firefox's `browser.storage.local` API. This data never leaves your device and can be cleared at any time via the extension popup ("Reset data").
+- **Network Requests**: The extension only issues standard requests to YouTube's own internal API endpoint (`/youtubei/v1/next`) to retrieve video disclosure metadata when browsing YouTube. On Facebook, all detection is performed entirely in-memory within the local DOM. No third-party servers, external APIs, analytics, or tracking services are used.
 
 ## 3. Third-Party Services
 
-HerbiSight for YouTube does not integrate with any analytics providers, telemetry platforms, advertising networks, or third-party servers.
+HerbiSight does not integrate with any analytics providers, telemetry platforms, advertising networks, or third-party servers.
 
 ## 4. Contact
 

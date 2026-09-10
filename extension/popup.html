@@ -8,39 +8,49 @@
   <header>
     <img src="icons/icon-48.png" alt="" width="24" height="24">
     <h1>HerbiSight</h1>
-    <label class="switch" title="Enable / disable filtering">
-      <input type="checkbox" id="enabled">
-      <span class="slider"></span>
-    </label>
   </header>
 
-  <section class="row">
-    <span class="label">AI-labeled videos</span>
-    <div class="seg" id="mode">
-      <button data-mode="hide" id="mode-hide">Remove</button>
-      <button data-mode="dim" id="mode-dim">Dim</button>
+  <section class="platform-group">
+    <div class="row">
+      <span class="label">YouTube</span>
+      <div class="seg" id="yt-mode">
+        <button data-val="allow" id="yt-allow">Allow</button>
+        <button data-val="dim" id="yt-dim">Dim</button>
+        <button data-val="block" id="yt-block">Block</button>
+      </div>
+    </div>
+    <div class="row subrow" id="shorts-row">
+      <span class="label sub">Auto-skip Shorts</span>
+      <label class="switch small" title="Automatically skip AI-labeled Shorts">
+        <input type="checkbox" id="skipShorts">
+        <span class="slider"></span>
+      </label>
     </div>
   </section>
 
-  <section class="row">
-    <span class="label">Auto-skip AI Shorts</span>
-    <label class="switch small">
-      <input type="checkbox" id="skipShorts">
-      <span class="slider"></span>
-    </label>
+  <section class="platform-group">
+    <div class="row">
+      <span class="label">Facebook</span>
+      <div class="seg" id="fb-mode">
+        <button data-val="allow" id="fb-allow">Allow</button>
+        <button data-val="dim" id="fb-dim">Dim</button>
+        <button data-val="block" id="fb-block">Block</button>
+      </div>
+    </div>
   </section>
 
   <section class="stats">
     <div><b id="stat-session">–</b><span>weeds pulled<br>on this page</span></div>
     <div><b id="stat-total">–</b><span>pulled<br>all-time</span></div>
-    <div><b id="stat-cache">–</b><span>videos<br>checked</span></div>
+    <div><b id="stat-checked">–</b><span>entries<br>checked</span></div>
   </section>
 
   <footer>
-    <span class="hint">Detects YouTube’s own “Made&nbsp;with&nbsp;AI” label</span>
-    <button id="clear" title="Forget all cached verdicts">Reset cache</button>
+    <span class="hint">Filters platform AI disclosure labels</span>
+    <button id="clear" title="Reset stats and cached verdicts">Reset data</button>
   </footer>
 
+  <script src="shared.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>

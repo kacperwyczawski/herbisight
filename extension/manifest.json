@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "HerbiSight for YouTube",
-  "version": "1.0",
-  "description": "Hides videos that YouTube labels as \"Made with AI\" from your feed, search, related videos and Shorts.",
+  "name": "HerbiSight",
+  "version": "1.1",
+  "description": "Hides or dims content labeled as AI on YouTube and Facebook feeds.",
   "browser_specific_settings": {
     "gecko": {
       "id": "{5f4e9706-f39b-4596-95dc-93e990aab38d}",
@@ -33,11 +33,21 @@
   "content_scripts": [
     {
       "matches": ["https://www.youtube.com/*", "https://m.youtube.com/*"],
-      "js": ["content.js"],
+      "js": ["shared.js", "content-youtube.js"],
+      "css": ["content.css"],
+      "run_at": "document_start"
+    },
+    {
+      "matches": ["https://*.facebook.com/*"],
+      "js": ["shared.js", "content-facebook.js"],
       "css": ["content.css"],
       "run_at": "document_start"
     }
   ],
   "permissions": ["storage"],
-  "host_permissions": ["https://www.youtube.com/*", "https://m.youtube.com/*"]
+  "host_permissions": [
+    "https://www.youtube.com/*",
+    "https://m.youtube.com/*",
+    "https://*.facebook.com/*"
+  ]
 }

@@ -1,4 +1,4 @@
-/* HerbiSight for YouTube — flagged items are marked with [data-aib] by content.js.
+/* HerbiSight — flagged items are marked with [data-aib] by content scripts.
    The root element carries data-aib-on (master switch) and data-aib-mode. */
 
 /* Hide mode: collapse the item entirely so the grid/list reflows. */

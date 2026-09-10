@@ -1,17 +1,17 @@
 # HerbiSight
 
-![Mozilla Add-on Version](https://img.shields.io/amo/v/herbisight-for-youtube)
+![Mozilla Add-on Version](https://img.shields.io/amo/v/herbisight)
 
 > [!NOTE]
 > HerbiSight is a fork of [weedout-for-youtube](https://github.com/masteranza/weedout-for-youtube) ported to Firefox.
 
-HerbiSight is a Firefox extension that automatically removes videos YouTube labels as “Made with AI” from your feeds, search results, related videos, playlists, and shorts before you click them.
+HerbiSight is a Firefox extension that automatically removes or dims content labeled as AI from your YouTube feeds (including search, related videos, and Shorts) and Facebook feeds.
 
 ## What it does
 
-- Uses YouTube’s own disclosure labels rather than a blocklist or heuristic AI detector.
-- **Remove mode** hides labeled videos completely; **Dim mode** fades and tags them for review.
-- Optional auto-skip for labeled Shorts.
+- Uses official platform disclosure labels (YouTube "Made with AI" and Facebook "AI info") rather than heuristic AI detectors.
+- **Independent 3-way controls**: Configure **Allow**, **Dim** (fade & tag), or **Block** (hide completely) separately for YouTube and Facebook.
+- Optional auto-skip for labeled YouTube Shorts.
 - Caches verdicts locally and makes no analytics or tracking requests.
 
 ## Prerequisites
@@ -58,7 +58,12 @@ bun run build
 
 ## Honest Limit
 
-HerbiSight can only filter videos YouTube labels. Unlabeled AI content still gets through.
+HerbiSight can only filter content that platforms officially label as AI. Unlabeled AI content still gets through.
+
+## Disclaimer
+
+- **Not an ad blocker**: HerbiSight does not block advertisements, circumvent paywalls, or interfere with platform monetization. It strictly acts on public platform AI disclosure tags according to your personal viewing preferences.
+- **No affiliation**: HerbiSight is an independent open-source project and is not affiliated with, sponsored by, or endorsed by YouTube, Google, Facebook, Meta, or any of their affiliates or subsidiaries. All product and company names are trademarks™ or registered® trademarks of their respective holders.
 
 ## License & Privacy
 
