@@ -74,25 +74,29 @@
     return el.tagName === 'DIV' || el.tagName === 'ARTICLE';
   };
 
-  const findPostContainer = (btn) => {
-    // 1. Modern Facebook virtualized feed card container (language-agnostic React attribute)
-    const virtCard = btn.closest('div[data-virtualized="false"]');
+  const findPostContainer = (el) => {
+    // 1. Modern Facebook mobile feed card container (WebLite / DCM delivery content module)
+    const mobileCard = el.closest('div[data-dcm-id], div[data-tracking-duration-id]');
+    if (mobileCard && isSafePostContainer(mobileCard)) return mobileCard;
+
+    // 2. Modern Facebook virtualized feed card container (language-agnostic React attribute)
+    const virtCard = el.closest('div[data-virtualized="false"]');
     if (virtCard && isSafePostContainer(virtCard)) return virtCard;
 
-    // 2. Feed item container with ARIA set position (language-agnostic W3C attribute)
-    const posCard = btn.closest('div[aria-posinset]');
+    // 3. Feed item container with ARIA set position (language-agnostic W3C attribute)
+    const posCard = el.closest('div[aria-posinset]');
     if (posCard && isSafePostContainer(posCard)) return posCard;
 
-    // 3. Semantic ARIA article (standard feed posts)
-    const article = btn.closest('div[role="article"]');
+    // 4. Semantic ARIA article (standard feed posts)
+    const article = el.closest('div[role="article"], article');
     if (article && isSafePostContainer(article)) return article;
 
-    // 4. Feed unit pagelet wrapper
-    const pagelet = btn.closest('div[data-pagelet*="FeedUnit"]');
+    // 5. Feed unit pagelet wrapper
+    const pagelet = el.closest('div[data-pagelet*="FeedUnit"]');
     if (pagelet && isSafePostContainer(pagelet)) return pagelet;
 
-    // 5. Language-agnostic fallback: walk up to container enclosing bottom action elements
-    let curr = btn;
+    // 6. Language-agnostic fallback: walk up to container enclosing bottom action elements
+    let curr = el;
     let bestCard = null;
     while (curr && curr.parentElement && curr.parentElement !== document.body) {
       const role = curr.getAttribute?.('role');
@@ -103,14 +107,15 @@
       // - data-ad-rendering-role (internal React ad/feed prop)
       // - role="toolbar" (reactions / bottom action bar)
       // - bottom comment/share forms
+      // - mobile reactions/actions (data-long-click-action-id, data-comp-id)
       if (
         curr.querySelector?.(
-          '[data-ad-rendering-role*="button"], [role="toolbar"], form[action*="comment"]'
+          '[data-ad-rendering-role*="button"], [role="toolbar"], form[action*="comment"], [data-long-click-action-id], [data-comp-id]'
         )
       ) {
         bestCard = curr;
         const parentActions = curr.parentElement.querySelectorAll?.(
-          '[data-ad-rendering-role*="button"], [role="toolbar"]'
+          '[data-ad-rendering-role*="button"], [role="toolbar"], [data-long-click-action-id], [data-comp-id]'
         );
         if (parentActions && parentActions.length > 1) {
           break;
@@ -143,15 +148,18 @@
   };
 
   // -------------------------------------------------------------------- scan
-  const inspectButton = (btn) => {
-    if (!btn || !btn.isConnected) return;
+  const inspectElement = (el) => {
+    if (!el || !el.isConnected) return;
 
     // AI badges are compact pill elements, not layout wrappers
-    if (btn.children.length > 5) return;
+    if (el.children.length > 5) return;
 
-    const rawText = btn.textContent || '';
-    const ariaText = btn.getAttribute('aria-label') || '';
-    const clean = (rawText + ' ' + ariaText).replace(/[\u200B-\u200D\uFEFF\u034F]/g, '').trim();
+    const rawText = el.textContent || '';
+    const ariaText = el.getAttribute('aria-label') || '';
+    // Strip zero-width, bidirectional (LRM/RLM), and format control characters
+    const clean = (rawText + ' ' + ariaText)
+      .replace(/[\u200B-\u200F\uFEFF\u034F\u202A-\u202E]/gu, '')
+      .trim();
     if (!clean || clean.length > 60) return;
 
     // Ignore Meta's sidebar chatbot / search entry
@@ -159,23 +167,25 @@
     if (/^\s*ask\s+meta\s+ai/i.test(clean)) return;
 
     if (AI_LABEL_RE.test(clean)) {
-      console.log('[HerbiSight] Matched AI button text:', clean);
-      const container = findPostContainer(btn);
+      console.log('[HerbiSight] Matched AI element text:', clean);
+      const container = findPostContainer(el);
       if (container) {
         mark(container, true);
       } else {
-        console.warn('[HerbiSight] AI button found but could not resolve post container:', btn);
+        console.warn('[HerbiSight] AI element found but could not resolve post container:', el);
       }
     }
   };
 
+  const CANDIDATE_SEL = '[role="button"], [role="link"], [data-focusable="true"]';
+
   const scan = () => {
     if (!storageReady || settings.facebookMode === 'allow' || !document.body) return;
 
-    // Query all interactive buttons on the page
-    const buttons = document.querySelectorAll('[role="button"]');
-    for (const btn of buttons) {
-      inspectButton(btn);
+    // Query interactive buttons, links, and focusable elements across desktop & mobile
+    const elements = document.querySelectorAll(CANDIDATE_SEL);
+    for (const el of elements) {
+      inspectElement(el);
     }
   };
 
@@ -197,7 +207,7 @@
           if (!el.isConnected) flaggedContainers.delete(el);
         }
         const totalFeedItems = document.querySelectorAll(
-          'div[data-virtualized="false"], div[aria-posinset], div[role="article"], div[data-pagelet*="FeedUnit"]'
+          'div[data-virtualized="false"], div[aria-posinset], div[role="article"], div[data-pagelet*="FeedUnit"], div[data-dcm-id], div[data-tracking-duration-id]'
         ).length;
         sendResponse({
           platform: 'facebook',
