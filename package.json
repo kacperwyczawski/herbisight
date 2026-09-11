@@ -1,6 +1,6 @@
 {
   "name": "herbisight",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Firefox extension that removes or dims AI-labeled content from YouTube and Facebook feeds.",
   "scripts": {
     "dev": "web-ext run --source-dir extension",
