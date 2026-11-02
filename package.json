@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "web-ext run --source-dir extension",
     "build": "web-ext build --source-dir extension --artifacts-dir dist --overwrite-dest",
-    "lint": "web-ext lint --source-dir extension"
+    "lint": "web-ext lint --source-dir extension",
+    "version": "bun -e 'const f = \"extension/manifest.json\"; const s = await Bun.file(f).text(); await Bun.write(f, s.replace(/\"version\":\\s*\"[^\"]+\"/, `\"version\": \"${process.env.npm_package_version}\"`));' && git add extension/manifest.json"
   },
   "devDependencies": {
     "web-ext": "^8.4.0"
