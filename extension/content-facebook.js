@@ -1,11 +1,6 @@
 /* HerbiSight for Facebook — filters posts labeled as AI content in the feed.
- *
- * How it works:
- *   Facebook renders AI disclosure labels directly on feed cards as interactive
- *   role="button" elements (e.g. "AI content", "AI info", "Made with AI", localized variants).
- *   We detect matching buttons in-memory, resolve the enclosing whole post card
- *   (via data-virtualized, aria-posinset, role=article, or bottom action bar ancestors),
- *   and collapse or dim it via CSS.
+ * Detects AI disclosure badges in-memory, resolves enclosing feed cards
+ * without relying on localized text, and collapses or dims them via CSS.
  */
 (() => {
   'use strict';
@@ -15,7 +10,70 @@
   const { DEFAULTS, AI_LABEL_RE, normalizeSettings } = globalThis.HerbiSight;
   const FORBIDDEN_TAGS = new Set(['HTML', 'BODY', 'MAIN', 'NAV', 'HEADER']);
 
-  // ------------------------------------------------------------------- state
+  const COMMENT_SEL = [
+    '[data-sigil*="comment"]',
+    '[data-sigil*="reply"]',
+    '[data-sigil*="ufi"]',
+    '[data-commentid]',
+    '[data-testid*="comment" i]',
+    '[data-testid*="UFI" i]',
+    '[data-testid*="feedback" i]',
+    '[data-ad-rendering-role="comment"]',
+    'div[data-pagelet*="Comment" i]',
+    'div[data-pagelet*="comment" i]',
+    'div[data-pagelet*="UFI" i]',
+    'div[data-pagelet*="ufi" i]',
+    'div[data-pagelet*="Feedback" i]',
+    'div[data-pagelet*="feedback" i]',
+    'form[action*="comment"]',
+    'form[action*="reply"]',
+    'ul[role="group"]',
+    'ul[class*="comment" i]',
+    '[role="article"] [role="article"]',
+    'div[role="region"][aria-label*="Comment" i]',
+    'div[role="region"][aria-label*="comment" i]',
+    'div[role="region"][aria-label*="Komentarz" i]',
+    'div[role="region"][aria-label*="komentarz" i]'
+  ].join(',');
+
+  const COMMENT_ARIA_RE = /(^|[\s\b\x27\u2019\-])(comment|reply|replies|komentar|odpowied|comentario|respuesta|commentaire|r[eé]ponse|kommentar|antwort|commento|risposta|reactie|комментар|коментар|ответ|відповідь|yorum|yanıt|تعليق|رد|コメント|評論|评论|댓글)/i;
+
+  const isCommentOrInsideComment = (el) => {
+    if (!el || el.nodeType !== 1) return false;
+
+    if (el.matches?.(COMMENT_SEL) || el.closest?.(COMMENT_SEL)) return true;
+    if (el.closest?.('form, [role="textbox"], [contenteditable="true"]')) return true;
+    if (el.closest?.('ul, ol')) return true;
+
+    let curr = el;
+    while (curr && curr !== document.body) {
+      const sigil = curr.getAttribute?.('data-sigil');
+      if (sigil && /comment|reply/i.test(sigil)) return true;
+
+      const testid = curr.getAttribute?.('data-testid');
+      if (testid && /comment|ufi|feedback/i.test(testid)) return true;
+
+      const aria = curr.getAttribute?.('aria-label');
+      if (aria && COMMENT_ARIA_RE.test(aria)) {
+        const role = curr.getAttribute?.('role');
+        if (role !== 'main' && role !== 'feed') return true;
+      }
+
+      if (
+        curr.hasAttribute?.('data-virtualized') ||
+        curr.hasAttribute?.('data-dcm-id') ||
+        curr.hasAttribute?.('data-tracking-duration-id') ||
+        curr.getAttribute?.('role') === 'feed'
+      ) {
+        break;
+      }
+
+      curr = curr.parentElement;
+    }
+
+    return false;
+  };
+
   let settings = { ...DEFAULTS };
   let storageReady = false;
   let scanScheduled = false;
@@ -25,7 +83,6 @@
 
   const flaggedContainers = new Set();
 
-  // -------------------------------------------------------------- root attrs
   const applyRootAttrs = () => {
     const de = document.documentElement;
     if (!de) return;
@@ -35,14 +92,13 @@
     de.setAttribute('data-aib-mode', settings.facebookMode === 'block' ? 'hide' : 'dim');
   };
 
-  // ----------------------------------------------------------------- storage
   const loadStorage = async () => {
     try {
       const got = await B.storage.local.get('settings');
       if (got.settings && typeof got.settings === 'object') {
         settings = normalizeSettings(got.settings);
       }
-    } catch (e) { /* first run */ }
+    } catch { /* first run */ }
     storageReady = true;
     applyRootAttrs();
     console.log('[HerbiSight] Facebook filtering mode:', settings.facebookMode);
@@ -59,43 +115,43 @@
         try {
           const got = await B.storage.local.get('totalPulled');
           await B.storage.local.set({ totalPulled: (got.totalPulled || 0) + n });
-        } catch (e) { /* ignore */ }
+        } catch { /* ignore */ }
       }
     }, 2500);
   };
 
-  // -------------------------------------------------------- container lookup
   const isSafePostContainer = (el) => {
     if (!el || el.nodeType !== 1) return false;
     if (FORBIDDEN_TAGS.has(el.tagName)) return false;
     const role = el.getAttribute ? el.getAttribute('role') : null;
     if (role === 'main' || role === 'feed' || role === 'navigation') return false;
     if (el.id && el.id.startsWith('mount_0_0_')) return false;
+    if (isCommentOrInsideComment(el)) return false;
     return el.tagName === 'DIV' || el.tagName === 'ARTICLE';
   };
 
   const findPostContainer = (el) => {
-    // 1. Modern Facebook mobile feed card container (WebLite / DCM delivery content module)
+    if (!el || isCommentOrInsideComment(el)) return null;
+
     const mobileCard = el.closest('div[data-dcm-id], div[data-tracking-duration-id]');
     if (mobileCard && isSafePostContainer(mobileCard)) return mobileCard;
 
-    // 2. Modern Facebook virtualized feed card container (language-agnostic React attribute)
     const virtCard = el.closest('div[data-virtualized="false"]');
     if (virtCard && isSafePostContainer(virtCard)) return virtCard;
 
-    // 3. Feed item container with ARIA set position (language-agnostic W3C attribute)
     const posCard = el.closest('div[aria-posinset]');
     if (posCard && isSafePostContainer(posCard)) return posCard;
 
-    // 4. Semantic ARIA article (standard feed posts)
-    const article = el.closest('div[role="article"], article');
+    let article = el.closest('div[role="article"], article');
+    while (article && isCommentOrInsideComment(article)) {
+      article = article.parentElement?.closest('div[role="article"], article');
+    }
     if (article && isSafePostContainer(article)) return article;
 
-    // 5. Feed unit pagelet wrapper
     const pagelet = el.closest('div[data-pagelet*="FeedUnit"]');
     if (pagelet && isSafePostContainer(pagelet)) return pagelet;
 
-    // 6. Language-agnostic fallback: walk up to container enclosing bottom action elements
+    // Fallback: walk up to container enclosing post actions (toolbar, reactions, comment form)
     let curr = el;
     let bestCard = null;
     while (curr && curr.parentElement && curr.parentElement !== document.body) {
@@ -103,11 +159,6 @@
       if (role === 'main' || role === 'feed' || role === 'navigation') break;
       if (curr.id && curr.id.startsWith('mount_0_0_')) break;
 
-      // Check for bottom action bar indicators without relying on localized text:
-      // - data-ad-rendering-role (internal React ad/feed prop)
-      // - role="toolbar" (reactions / bottom action bar)
-      // - bottom comment/share forms
-      // - mobile reactions/actions (data-long-click-action-id, data-comp-id)
       if (
         curr.querySelector?.(
           '[data-ad-rendering-role*="button"], [role="toolbar"], form[action*="comment"], [data-long-click-action-id], [data-comp-id]'
@@ -128,10 +179,10 @@
     return null;
   };
 
-  // ------------------------------------------------------------------ marking
   const mark = (container, flagged) => {
-    if (!container || !container.isConnected || !isSafePostContainer(container)) return;
+    if (!container || !container.isConnected) return;
     if (flagged) {
+      if (!isSafePostContainer(container) || isCommentOrInsideComment(container)) return;
       if (!container.hasAttribute('data-aib')) {
         container.setAttribute('data-aib', '');
         console.log('[HerbiSight] Whole post flagged and dimmed/hidden:', container);
@@ -147,11 +198,11 @@
     }
   };
 
-  // -------------------------------------------------------------------- scan
   const inspectElement = (el) => {
     if (!el || !el.isConnected) return;
+    if (isCommentOrInsideComment(el)) return;
 
-    // AI badges are compact pill elements, not layout wrappers
+    // AI badges are compact pill elements, not container wrappers
     if (el.children.length > 5) return;
 
     const rawText = el.textContent || '';
@@ -162,7 +213,6 @@
       .trim();
     if (!clean || clean.length > 60) return;
 
-    // Ignore Meta's sidebar chatbot / search entry
     if (/^\s*meta\s+ai\s*$/i.test(clean)) return;
     if (/^\s*ask\s+meta\s+ai/i.test(clean)) return;
 
@@ -182,9 +232,16 @@
   const scan = () => {
     if (!storageReady || settings.facebookMode === 'allow' || !document.body) return;
 
-    // Query interactive buttons, links, and focusable elements across desktop & mobile
+    const badMarked = document.querySelectorAll('[data-aib]');
+    for (const el of badMarked) {
+      if (isCommentOrInsideComment(el)) {
+        mark(el, false);
+      }
+    }
+
     const elements = document.querySelectorAll(CANDIDATE_SEL);
     for (const el of elements) {
+      if (isCommentOrInsideComment(el)) continue;
       inspectElement(el);
     }
   };
@@ -198,17 +255,23 @@
     }, 150);
   };
 
-  // ------------------------------------------------------------------ popup IPC
   try {
     B.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       if (!msg || typeof msg !== 'object') return;
       if (msg.type === 'aib:stats') {
         for (const el of flaggedContainers) {
-          if (!el.isConnected) flaggedContainers.delete(el);
+          if (!el.isConnected || isCommentOrInsideComment(el)) {
+            if (el.isConnected) mark(el, false);
+            flaggedContainers.delete(el);
+          }
         }
-        const totalFeedItems = document.querySelectorAll(
+        let totalFeedItems = 0;
+        const candidates = document.querySelectorAll(
           'div[data-virtualized="false"], div[aria-posinset], div[role="article"], div[data-pagelet*="FeedUnit"], div[data-dcm-id], div[data-tracking-duration-id]'
-        ).length;
+        );
+        for (const c of candidates) {
+          if (isSafePostContainer(c)) totalFeedItems++;
+        }
         sendResponse({
           platform: 'facebook',
           sessionPulled: flaggedContainers.size,
@@ -217,9 +280,8 @@
         });
       }
     });
-  } catch (e) { /* messaging unavailable; popup shows dashes */ }
+  } catch { /* messaging unavailable; popup shows dashes */ }
 
-  // --------------------------------------------------------- storage changes
   try {
     B.storage.onChanged.addListener((changes, area) => {
       if (area !== 'local') return;
@@ -230,9 +292,8 @@
         if (settings.facebookMode !== 'allow') scheduleScan();
       }
     });
-  } catch (e) { /* ignore */ }
+  } catch { /* ignore */ }
 
-  // -------------------------------------------------------------------- boot
   applyRootAttrs();
   loadStorage();
 
@@ -247,7 +308,6 @@
     startObserver();
   }
 
-  // SPA navigation watcher
   setInterval(() => {
     if (location.href !== lastHref) {
       lastHref = location.href;

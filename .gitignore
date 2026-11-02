@@ -18,5 +18,9 @@ web-ext-artifacts/
 *.bak
 *.log
 
+# Environment & credentials
+.env
+.env.*
+
 # Private tooling
 .claude/
